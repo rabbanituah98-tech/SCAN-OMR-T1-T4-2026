@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Imbas OMR · Penanda Kertas 1</title>
+<meta name="description" content="Imbas dan tanda kertas jawapan OMR objektif secara automatik menggunakan kamera telefon atau PDF imbasan.">
+<meta name="theme-color" content="#2f3e9e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Imbas OMR">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f3e9e'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='3'%3E%3Ccircle cx='18' cy='22' r='6'/%3E%3Ccircle cx='46' cy='22' r='6'/%3E%3Ccircle cx='18' cy='42' r='6'/%3E%3C/g%3E%3Ccircle cx='32' cy='22' r='7.5' fill='%23fff'/%3E%3Ccircle cx='46' cy='42' r='7.5' fill='%23fff'/%3E%3Ccircle cx='32' cy='42' r='6' fill='none' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f3f1ea;--card:#fff;--ink:#1b2133;--mute:#5d6578;--line:#e3dfd4;--soft:#f7f6f1;
+  --pri:#2f3e9e;--pri-ink:#fff;--pri-soft:#e9ecfb;
+  --ok:#13803e;--ok-soft:#e3f4e9;--bad:#c8312a;--bad-soft:#fce8e6;--warn:#b86a00;--warn-soft:#fff1d6;
+  --r:14px;--sh:0 1px 2px rgba(27,33,51,.06),0 4px 16px rgba(27,33,51,.06);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3{line-height:1.2;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+header.top{background:var(--pri);color:#fff;padding:14px 0 0;padding-top:calc(14px + env(safe-area-inset-top))}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{flex:none}
+.brand h1{font-size:20px;letter-spacing:.2px}
+.brand p{margin:2px 0 0;font-size:13px;opacity:.82}
+nav.tabs{display:flex;gap:4px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{background:none;border:0;color:#fff;opacity:.75;padding:10px 14px;border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap;font-weight:600}
+nav.tabs button.on{background:var(--bg);color:var(--pri);opacity:1}
+main{padding:16px 0 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:14px}
+.card h3{font-size:16px;margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);font-weight:600}
+.fld input,.fld select,.inp{border:1px solid #cfcabd;background:#fff;border-radius:10px;padding:10px 12px;font-size:15px;color:var(--ink);font-weight:400;width:100%;min-width:0}
+.fld input:focus,.fld select:focus,.inp:focus{outline:2px solid var(--pri);outline-offset:0;border-color:var(--pri)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #cfcabd;background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;text-decoration:none;color:var(--ink);user-select:none;-webkit-user-select:none;min-height:42px}
+.btn:hover{background:var(--soft)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.primary:hover{background:#26338a}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--mute)}
+.btn.danger{color:var(--bad);border-color:#efc2bd}
+.btn.big{padding:14px 18px;font-size:16px;border-radius:12px;min-height:54px}
+.btn.sm{padding:6px 10px;min-height:34px;font-size:13px;border-radius:8px}
+.btn.block{width:100%}
+.btn.on{background:var(--pri-soft);border-color:var(--pri);color:var(--pri)}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.mt{margin-top:12px}
+.grow{flex:1}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+@media(max-width:420px){.actions{grid-template-columns:1fr}}
+.hint{color:var(--mute);font-size:13px;margin:10px 0 0}
+.muted{color:var(--mute)}
+small{font-size:12px}
+/* workspace */
+.work-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.work-head b{font-size:16px}
+.work-head .sub{color:var(--mute);font-size:13px;word-break:break-all}
+.zoom{display:flex;gap:4px;flex:none}
+.zoom button{width:38px;height:38px;border-radius:10px;border:1px solid #cfcabd;background:#fff;font-size:18px;cursor:pointer}
+.work-body{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+@media(max-width:900px){.work-body{grid-template-columns:1fr}}
+.cvwrap{background:#2a2f3d;border-radius:12px;overflow:auto;max-height:80vh;text-align:center;-webkit-overflow-scrolling:touch}
+.cvwrap canvas{display:block;margin:0 auto;touch-action:manipulation;max-width:none}
+.panel{display:flex;flex-direction:column;gap:12px}
+.lead{margin:0;font-size:14px}
+.scorebox{display:flex;align-items:baseline;justify-content:space-between;background:var(--pri-soft);border-radius:12px;padding:12px 16px}
+.scorebox .mk{font-size:15px;color:var(--mute)}
+.scorebox .mk b{font-size:40px;color:var(--pri);font-variant-numeric:tabular-nums}
+.scorebox .pc{font-size:26px;font-weight:700;color:var(--pri);font-variant-numeric:tabular-nums}
+.flagline{font-size:13px;color:var(--mute);display:flex;gap:10px;flex-wrap:wrap}
+.flagline span b{color:var(--ink)}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px}
+.chip{position:relative;border:1px solid var(--line);border-radius:9px;padding:5px 4px;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.chip .n{font-size:11px;color:var(--mute)}
+.chip b{font-size:17px}
+.chip.ok{background:var(--ok-soft);border-color:#b9e0c7}.chip.ok b{color:var(--ok)}
+.chip.bad{background:var(--bad-soft);border-color:#f2c4bf}.chip.bad b{color:var(--bad)}
+.chip.flag::after{content:"";position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#f0a000;box-shadow:0 0 0 2px #fff}
+.chip.man{outline:2px dashed var(--pri);outline-offset:-3px}
+.chip.sel{box-shadow:0 0 0 3px var(--pri)}
+.picker{display:flex;gap:6px;flex-wrap:wrap;padding:10px;border-radius:12px;background:var(--soft);border:1px solid var(--line);align-items:center}
+.picker .btn{min-width:46px}
+details.more{border:1px solid var(--line);border-radius:12px;padding:0 12px}
+details.more summary{cursor:pointer;padding:12px 0;font-weight:600}
+details.more[open]{padding-bottom:12px}
+details.more>*:not(summary){margin-top:8px}
+.blk{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--soft)}
+.blk-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
+.blk .g5{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.blk .fld input,.blk .fld select{padding:8px;font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-2px;margin-right:4px}
+.diagram{background:var(--soft);border-radius:10px;padding:8px;display:flex;justify-content:center}
+/* tables */
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{background:var(--soft);font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--mute);position:sticky;top:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.det td{background:var(--soft);white-space:normal}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--soft);border-radius:12px;padding:10px 12px}
+.stat .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;color:var(--mute)}
+.bar{height:10px;border-radius:5px;background:#ebe8df;overflow:hidden;min-width:90px}
+.bar>i{display:block;height:100%;background:var(--ok)}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.tag.mudah{background:var(--ok-soft);color:var(--ok)}
+.tag.sederhana{background:var(--warn-soft);color:var(--warn)}
+.tag.sukar{background:var(--bad-soft);color:var(--bad)}
+.opt-cell{font-variant-numeric:tabular-nums}
+.opt-cell.key{font-weight:800;color:var(--ok)}
+.opt-cell.hot{color:var(--bad);font-weight:700}
+.keyview{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:var(--mute);line-height:1.7;word-break:break-all}
+.keyview b{color:var(--ink)}
+.empty{text-align:center;color:var(--mute);padding:28px 10px}
+.tips ul{margin:6px 0 0;padding-left:20px}
+.tips li{margin:4px 0}
+footer{text-align:center;color:var(--mute);font-size:12px;padding:10px 0 30px}
+/* busy + toast */
+#busy{position:fixed;inset:0;background:rgba(20,24,38,.45);display:flex;align-items:center;justify-content:center;z-index:50}
+#busy[hidden]{display:none}
+#busy div{background:#fff;border-radius:14px;padding:18px 22px;display:flex;gap:12px;align-items:center;box-shadow:var(--sh);font-weight:600}
+.spin{width:22px;height:22px;border:3px solid var(--pri-soft);border-top-color:var(--pri);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1b2133;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:92vw;box-shadow:var(--sh)}
+#toast[hidden]{display:none}
+.done{background:var(--ok-soft);border-color:#b9e0c7}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#fff" fill-opacity=".14"/><g fill="none" stroke="#fff" stroke-width="3"><circle cx="18" cy="22" r="6"/><circle cx="46" cy="22" r="6"/><circle cx="18" cy="42" r="6"/><circle cx="32" cy="42" r="6"/></g><circle cx="32" cy="22" r="7.5" fill="#fff"/><circle cx="46" cy="42" r="7.5" fill="#fff"/></svg>
+      <div><h1>Imbas OMR</h1><p>Penanda automatik Kertas 1 objektif</p></div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-t="imbas" class="on">Imbas</button>
+      <button data-t="keputusan">Keputusan</button>
+      <button data-t="analisis">Analisis Item</button>
+      <button data-t="tetapan">Skema &amp; Tetapan</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+<!-- ============ IMBAS ============ -->
+<section id="t-imbas">
+  <div class="card">
+    <div class="grid2">
+      <label class="fld">Kertas / skema jawapan<select id="selPaper"></select></label>
+      <label class="fld">Templat borang OMR<select id="selTpl"></select></label>
+    </div>
+    <div class="actions">
+      <label class="btn primary big"><input type="file" id="inCam" accept="image/*" capture="environment" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Ambil gambar</label>
+      <label class="btn big"><input type="file" id="inFile" accept="image/*,application/pdf,.pdf" multiple hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="m4 16 5-5 4 4 3-3 4 4"/></svg>Pilih gambar / PDF</label>
+    </div>
+    <p class="hint" id="queueInfo">Boleh pilih banyak gambar sekali gus, atau satu PDF imbasan (cth. ClearScanner / CamScanner) — setiap halaman = seorang murid.</p>
+  </div>
+
+  <div class="card" id="work" hidden>
+    <div class="work-head">
+      <div><b id="stTitle"></b><div class="sub" id="stSub"></div></div>
+      <div class="zoom"><button id="zOut" aria-label="Zum keluar">−</button><button id="zIn" aria-label="Zum masuk">+</button></div>
+    </div>
+    <div class="work-body">
+      <div class="cvwrap" id="cvwrap"><canvas id="cv" width="10" height="10"></canvas></div>
+      <aside class="panel" id="panel"></aside>
+    </div>
+  </div>
+
+  <div class="card tips" id="tips">
+    <h3>Cara guna</h3>
+    <ul>
+      <li><b>Kali pertama</b> bagi setiap rupa borang OMR: sistem minta anda bina <b>templat</b> — seret 4 bucu grid ke gelembung yang ditunjukkan. Simpan. Borang yang sama selepas itu ditanda automatik.</li>
+      <li>Borang lain rupa? Pilih <b>＋ Templat baharu</b>, atau pilih <b>Auto</b> supaya sistem cari templat yang paling padan bagi setiap helaian.</li>
+      <li>Letak kertas atas permukaan <b>gelap</b>, ambil gambar tegak dari atas, cahaya rata, keempat-empat bucu kertas kelihatan.</li>
+      <li>Semak warna: <span style="color:var(--ok);font-weight:700">hijau</span> betul, <span style="color:var(--bad);font-weight:700">merah</span> salah, cincin putus-putus = jawapan sebenar, titik <span style="color:#d08a00;font-weight:700">jingga</span> = perlu semak (ganda / tanda kabur). Ketik petak nombor untuk betulkan jawapan.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ KEPUTUSAN ============ -->
+<section id="t-keputusan" hidden>
+  <div class="card">
+    <div class="row">
+      <select id="fPaper" class="inp" style="max-width:280px"></select>
+      <select id="fKelas" class="inp" style="max-width:180px"></select>
+      <input id="fCari" class="inp" placeholder="Cari nama…" style="max-width:220px">
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn sm" id="bCsv">Muat turun CSV (Excel)</button>
+      <button class="btn sm" id="bTsv">Salin untuk Google Sheets</button>
+      <button class="btn sm danger" id="bDelFilt">Padam yang ditapis</button>
+    </div>
+    <div class="tbl-wrap"><table id="tblRes"></table></div>
+  </div>
+</section>
+
+<!-- ============ ANALISIS ============ -->
+<section id="t-analisis" hidden>
+  <div class="card">
+    <div class="row">
+      <select id="aPaper" class="inp" style="max-width:280px"></select>
+      <select id="aKelas" class="inp" style="max-width:180px"></select>
+    </div>
+    <p class="hint">Indeks kesukaran = % murid menjawab betul. Mudah ≥ 70%, Sederhana 40–69%, Sukar &lt; 40%. Pilihan berwarna merah = pengganggu paling kerap dipilih.</p>
+    <div class="tbl-wrap" style="margin-top:12px"><table id="tblItem"></table></div>
+  </div>
+</section>
+
+<!-- ============ TETAPAN ============ -->
+<section id="t-tetapan" hidden>
+  <div class="card">
+    <h3>Skema jawapan</h3>
+    <p class="hint" style="margin-top:0">Taip jawapan berturutan (cth. <code>DCBAACDCBD…</code>). Bilangan huruf = bilangan soalan. Markah dalam tab Keputusan dikira semula serta-merta jika skema diubah.</p>
+    <div id="paperList"></div>
+    <button class="btn" id="bAddPaper" style="margin-top:10px">＋ Kertas baharu</button>
+  </div>
+  <div class="card">
+    <h3>Templat borang OMR</h3>
+    <div id="tplList"></div>
+    <div class="row mt">
+      <button class="btn sm" id="bTplExp">Eksport templat (.json)</button>
+      <label class="btn sm"><input type="file" id="inTplImp" accept=".json,application/json" hidden>Import templat</label>
+    </div>
+    <p class="hint">Eksport templat untuk dikongsi dengan guru lain atau dipindah ke peranti lain.</p>
+  </div>
+  <div class="card">
+    <h3>Tetapan imbasan</h3>
+    <div class="grid2">
+      <label class="fld">Kepekaan tanda <span id="sensV" class="muted"></span>
+        <input type="range" id="setSens" min="0.06" max="0.30" step="0.01">
+        <small class="muted">Kiri = tanda tipis pun dikira. Kanan = hanya tanda gelap.</small></label>
+      <label class="fld">Mod warna
+        <select id="setMode"><option value="warna">Abaikan dakwat berwarna borang (disyorkan)</option><option value="kelabu">Kelabu biasa (jika murid guna pen)</option></select></label>
+    </div>
+    <div class="row mt">
+      <label class="row"><input type="checkbox" id="setAlign"> Auto-jajar grid halus setiap helaian</label>
+      <label class="row"><input type="checkbox" id="setCorner"> Semak bucu kertas setiap helaian</label>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Data</h3>
+    <p class="hint" style="margin-top:0">Semua data disimpan dalam pelayar peranti ini sahaja. Buat sandaran sebelum kosongkan pelayar atau tukar peranti.</p>
+    <div class="row mt">
+      <button class="btn sm" id="bBackup">Sandaran penuh (.json)</button>
+      <label class="btn sm"><input type="file" id="inRestore" accept=".json,application/json" hidden>Pulihkan sandaran</label>
+      <button class="btn sm danger" id="bWipe">Padam semua keputusan</button>
+    </div>
+  </div>
+</section>
+</main>
+<footer>Imbas OMR · dibangunkan untuk Cikgu Rabbani, SMKDUMA · semua pemprosesan berlaku dalam peranti anda</footer>
+
+<div id="busy" hidden><div><span class="spin"></span><span id="busyT">Memproses…</span></div></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+/* =========================================================
+   DATA
+   ========================================================= */
+const LET='ABCDE';
+const LS='imbasOMR_v1';
+function defaults(){return{
+  papers:{
+    T1:{nama:'Sejarah Tingkatan 1 · UASA 2026',kunci:'DCBAACDCBDCADDABCBAC',opsyen:4},
+    T4:{nama:'Sejarah Tingkatan 4 · Kertas 1 (1249/1)',kunci:'CDBDCABCDAAADCCBBBCBDBCADACBAADACDBCABDC',opsyen:4}
+  },
+  templates:{},results:[],
+  settings:{sens:0.12,mode:'warna',autoAlign:true,checkCorners:false,paper:'T1',tpl:'__auto',kelas:''}
+}}
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(LS)||'null');
+    if(s&&s.papers){const d=defaults();return{papers:s.papers,templates:s.templates||{},results:s.results||[],settings:Object.assign(d.settings,s.settings||{})}}
+  }catch(e){}
+  return defaults();
+}
+let DB=load();
+function save(){try{localStorage.setItem(LS,JSON.stringify(DB))}catch(e){toast('Gagal simpan — storan pelayar penuh atau disekat.',4000)}}
+
+/* =========================================================
+   UTIL
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+const clone=o=>JSON.parse(JSON.stringify(o));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+let toastT;
+function toast(m,ms=2400){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms)}
+function busy(m){const b=$('#busy');if(m===false){b.hidden=true;return}$('#busyT').textContent=m||'Memproses…';b.hidden=false}
+const tick=()=>new Promise(r=>setTimeout(r,20));
+function download(name,text,type){const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
+/* =========================================================
+   IMAGE LOADING
+   ========================================================= */
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('Gambar tidak dapat dibaca'));i.src=src})}
+async function fileToCanvas(file,max=2200){
+  const url=URL.createObjectURL(file);
+  try{const img=await loadImg(url);const w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,max/Math.max(w,h));
+    const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);return c}
+  finally{URL.revokeObjectURL(url)}
+}
+let pdfjsP=null;
+function loadScript(u){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=u;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+function loadPdfJs(){
+  if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+  if(pdfjsP)return pdfjsP;
+  const urls=['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'];
+  pdfjsP=(async()=>{for(const u of urls){try{await loadScript(u);if(window.pdfjsLib){window.pdfjsLib.GlobalWorkerOptions.workerSrc=u.replace('pdf.min.js','pdf.worker.min.js');return window.pdfjsLib}}catch(e){}}
+    pdfjsP=null;throw new Error('Pembaca PDF tidak dapat dimuatkan (rangkaian mungkin menyekat). Cuba guna data telefon, atau hantar gambar JPG.')})();
+  return pdfjsP;
+}
+async function renderPdfPage(pdf,p){
+  const page=await pdf.getPage(p);const v0=page.getViewport({scale:1});
+  const sc=Math.min(3,2200/Math.max(v0.width,v0.height));const vp=page.getViewport({scale:sc});
+  const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+  await page.render({canvasContext:x,viewport:vp}).promise;return c;
+}
+
+/* =========================================================
+   VISION: paper detection, perspective warp, darkness maps
+   ========================================================= */
+function otsu(g){const h=new Float64Array(256);for(let i=0;i<g.length;i++)h[g[i]]++;const n=g.length;let sum=0;for(let i=0;i<256;i++)sum+=i*h[i];
+  let sB=0,wB=0,best=0,th=127;for(let t=0;t<256;t++){wB+=h[t];if(!wB)continue;const wF=n-wB;if(!wF)break;sB+=t*h[t];const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>best){best=v;th=t}}return th}
+
+function detectPaper(src){
+  const S=480,k=Math.min(1,S/Math.max(src.width,src.height));
+  const w=Math.max(2,Math.round(src.width*k)),h=Math.max(2,Math.round(src.height*k));
+  const t=document.createElement('canvas');t.width=w;t.height=h;const tx=t.getContext('2d',{willReadFrequently:true});tx.drawImage(src,0,0,w,h);
+  const d=tx.getImageData(0,0,w,h).data,n=w*h,g=new Uint8Array(n);
+  for(let i=0;i<n;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2];const mx=Math.max(r,gg,b),mn=Math.min(r,gg,b);
+    g[i]=Math.max(0,(0.299*r+0.587*gg+0.114*b)-(mx-mn)*0.5)} // paper = bright & low saturation
+  const th=otsu(g);const lab=new Int32Array(n),st=new Int32Array(n);let L=0,bestL=0,bestA=0;
+  for(let i=0;i<n;i++){if(g[i]<=th||lab[i])continue;L++;let sp=0;st[sp++]=i;lab[i]=L;let a=0;
+    while(sp){const p=st[--sp];a++;const x=p%w;
+      if(x>0&&!lab[p-1]&&g[p-1]>th){lab[p-1]=L;st[sp++]=p-1}
+      if(x<w-1&&!lab[p+1]&&g[p+1]>th){lab[p+1]=L;st[sp++]=p+1}
+      if(p>=w&&!lab[p-w]&&g[p-w]>th){lab[p-w]=L;st[sp++]=p-w}
+      if(p<n-w&&!lab[p+w]&&g[p+w]>th){lab[p+w]=L;st[sp++]=p+w}}
+    if(a>bestA){bestA=a;bestL=L}}
+  const full=[[0,0],[src.width,0],[src.width,src.height],[0,src.height]];
+  if(bestA<0.12*n)return{quad:full,low:true};
+  let tl=[0,0,1e9],tr=[0,0,-1e9],br=[0,0,-1e9],bl=[0,0,1e9];
+  for(let i=0;i<n;i++){if(lab[i]!==bestL)continue;const x=i%w,y=(i/w)|0,s=x+y,df=x-y;
+    if(s<tl[2])tl=[x,y,s];if(s>br[2])br=[x,y,s];if(df>tr[2])tr=[x,y,df];if(df<bl[2])bl=[x,y,df]}
+  const quad=[tl,tr,br,bl].map(p=>[clamp((p[0]+0.5)/k,0,src.width),clamp((p[1]+0.5)/k,0,src.height)]);
+  const area=Math.abs(polyArea(quad));
+  return{quad,low:area<0.12*src.width*src.height};
+}
+function polyArea(q){let a=0;for(let i=0;i<q.length;i++){const p=q[i],r=q[(i+1)%q.length];a+=p[0]*r[1]-r[0]*p[1]}return a/2}
+function estAspect(q){const w=(dist(q[0],q[1])+dist(q[3],q[2]))/2,h=(dist(q[0],q[3])+dist(q[1],q[2]))/2;return clamp(h/Math.max(1,w),0.4,2.5)}
+
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;[M[c],M[p]]=[M[p],M[c]];
+    const v=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/v;if(!f)continue;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k]}}
+  return M.map((r,i)=>r[n]/(r[i]||1e-12))}
+function homography(src,dst){const A=[],b=[];for(let i=0;i<4;i++){const[x,y]=src[i],[u,v]=dst[i];
+  A.push([x,y,1,0,0,0,-u*x,-u*y]);b.push(u);A.push([0,0,0,x,y,1,-v*x,-v*y]);b.push(v)}return[...solve(A,b),1]}
+
+function warp(sd,quad,W,H){
+  const s=sd.data,sw=sd.width,sh=sd.height;const M=homography([[0,0],[W,0],[W,H],[0,H]],quad);
+  const out=new ImageData(W,H),o=out.data;let k=0;
+  for(let v=0;v<H;v++){for(let u=0;u<W;u++,k+=4){
+    const den=M[6]*u+M[7]*v+M[8];let x=(M[0]*u+M[1]*v+M[2])/den,y=(M[3]*u+M[4]*v+M[5])/den;
+    if(x<0)x=0;else if(x>sw-1.001)x=sw-1.001;if(y<0)y=0;else if(y>sh-1.001)y=sh-1.001;
+    const x0=x|0,y0=y|0,fx=x-x0,fy=y-y0,i00=(y0*sw+x0)*4,i10=i00+4,i01=i00+sw*4,i11=i01+4;
+    const a=(1-fx)*(1-fy),b=fx*(1-fy),c=(1-fx)*fy,d=fx*fy;
+    o[k]=s[i00]*a+s[i10]*b+s[i01]*c+s[i11]*d;o[k+1]=s[i00+1]*a+s[i10+1]*b+s[i01+1]*c+s[i11+1]*d;o[k+2]=s[i00+2]*a+s[i10+2]*b+s[i01+2]*c+s[i11+2]*d;o[k+3]=255}}
+  const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').putImageData(out,0,0);
+  return{img:out,canvas:c};
+}
+
+// paper-white background estimate (robust to shadows & marks)
+function background(a,W,H){
+  const cs=Math.max(8,Math.round(W/45)),gw=Math.ceil(W/cs),gh=Math.ceil(H/cs),g=new Float32Array(gw*gh),hist=new Uint32Array(64);
+  for(let gy=0;gy<gh;gy++)for(let gx=0;gx<gw;gx++){hist.fill(0);let cnt=0;const x0=gx*cs,y0=gy*cs,x1=Math.min(W,x0+cs),y1=Math.min(H,y0+cs);
+    for(let y=y0;y<y1;y++){let i=y*W+x0;for(let x=x0;x<x1;x++,i++){hist[Math.min(63,(a[i]|0)>>2)]++;cnt++}}
+    const tg=cnt*0.06;let acc=0,bin=63;for(;bin>0;bin--){acc+=hist[bin];if(acc>=tg)break}
+    g[gy*gw+gx]=Math.max(40,bin*4+2)}
+  const g2=new Float32Array(gw*gh);
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){let s=0,c=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=gw||yy>=gh)continue;s+=g[yy*gw+xx];c++}g2[y*gw+x]=s/c}
+  const bg=new Float32Array(W*H);
+  for(let y=0;y<H;y++){let fy=(y+0.5)/cs-0.5;fy=clamp(fy,0,gh-1);const y0=Math.floor(fy),y1=Math.min(gh-1,y0+1),ty=fy-y0;
+    for(let x=0;x<W;x++){let fx=(x+0.5)/cs-0.5;fx=clamp(fx,0,gw-1);const x0=Math.floor(fx),x1=Math.min(gw-1,x0+1),tx=fx-x0;
+      bg[y*W+x]=(g2[y0*gw+x0]*(1-tx)+g2[y0*gw+x1]*tx)*(1-ty)+(g2[y1*gw+x0]*(1-tx)+g2[y1*gw+x1]*tx)*ty}}
+  return bg;
+}
+function buildMaps(img,mode){
+  const W=img.width,H=img.height,d=img.data,n=W*H,lum=new Float32Array(n),sc=new Float32Array(n);
+  for(let i=0;i<n;i++){const r=d[i*4],g=d[i*4+1],b=d[i*4+2];lum[i]=0.299*r+0.587*g+0.114*b;sc[i]=mode==='kelabu'?lum[i]:Math.max(r,g,b)}
+  const bgL=background(lum,W,H),bgS=mode==='kelabu'?bgL:background(sc,W,H);
+  const DL=new Float32Array(n),DS=new Float32Array(n);
+  for(let i=0;i<n;i++){DL[i]=clamp(1-lum[i]/bgL[i],0,1);DS[i]=clamp(1-sc[i]/bgS[i],0,1)}
+  const IL=new Float64Array((W+1)*(H+1));
+  for(let y=0;y<H;y++){let row=0;for(let x=0;x<W;x++){row+=DL[y*W+x];IL[(y+1)*(W+1)+x+1]=IL[y*(W+1)+x+1]+row}}
+  return{W,H,DL,DS,IL};
+}
+function boxMean(I,W,H,cx,cy,a){const x0=clamp(Math.round(cx-a),0,W),x1=clamp(Math.round(cx+a),0,W),y0=clamp(Math.round(cy-a),0,H),y1=clamp(Math.round(cy+a),0,H);
+  const ar=(x1-x0)*(y1-y0);if(ar<=0)return 0;const W1=W+1;return(I[y1*W1+x1]-I[y0*W1+x1]-I[y1*W1+x0]+I[y0*W1+x0])/ar}
+function discMean(D,W,H,cx,cy,r){let s=0,c=0;const r2=r*r,x0=Math.max(0,Math.floor(cx-r)),x1=Math.min(W-1,Math.ceil(cx+r)),y0=Math.max(0,Math.floor(cy-r)),y1=Math.min(H-1,Math.ceil(cy+r));
+  for(let y=y0;y<=y1;y++){const dy=(y-cy)*(y-cy);for(let x=x0;x<=x1;x++){if((x-cx)*(x-cx)+dy<=r2){s+=D[y*W+x];c++}}}return c?s/c:0}
+
+/* =========================================================
+   GRID / TEMPLATE GEOMETRY
+   block = {q0,n,K,m,rho,arah:'h'|'v',c:[[u,v]x4]} (normalized corners)
+   h: options run left→right; questions run down; K columns of questions
+   ========================================================= */
+function gridST(b,k,i,j){const K=b.K||1,m=b.m,n=b.n,rho=K>1?b.rho:1;
+  const oj=m>1?j/(m-1):0;const comp=K>1?(k+oj*rho)/((K-1)+rho):oj;const it=n>1?i/(n-1):0;
+  return b.arah==='v'?[it,comp]:[comp,it]}
+function bPoint(b,c,k,i,j){const[s,t]=gridST(b,k,i,j);return lerp(lerp(c[0],c[1],s),lerp(c[3],c[2],s),t)}
+function blockGeom(b,W,H,off=[0,0]){
+  const c=b.c.map(p=>[p[0]*W+off[0],p[1]*H+off[1]]),K=b.K||1,items=[];
+  for(let k=0;k<K;k++)for(let i=0;i<b.n;i++){const pts=[];for(let j=0;j<b.m;j++)pts.push(bPoint(b,c,k,i,j));items.push({q:b.q0+k*b.n+i,pts})}
+  const p0=bPoint(b,c,0,0,0),so=b.m>1?dist(p0,bPoint(b,c,0,0,1)):Infinity,sr=b.n>1?dist(p0,bPoint(b,c,0,1,0)):Infinity;
+  let sp=Math.min(so,sr);if(!isFinite(sp)||sp<2)sp=20;
+  return{items,r:Math.max(2.5,sp*0.3),sp,c};
+}
+function cornerIdx(b){const K=b.K||1,n=b.n,m=b.m;return b.arah==='v'
+  ?[[0,0,0],[0,n-1,0],[K-1,n-1,m-1],[K-1,0,m-1]]
+  :[[0,0,0],[K-1,0,m-1],[K-1,n-1,m-1],[0,n-1,0]]}
+function cornerLabel(b,ci){const[k,i,j]=cornerIdx(b)[ci];return(b.q0+k*b.n+i)+LET[j]}
+
+function alignBlock(b,maps,noSearch){
+  const{W,H,IL}=maps,g=blockGeom(b,W,H),a=Math.max(1.5,g.r*0.85),am=Math.max(1,g.r*0.5),C=[],M=[];
+  for(const it of g.items)it.pts.forEach((p,j)=>{C.push(p);if(j>0)M.push(lerp(it.pts[j-1],p,0.5))});
+  const f=(dx,dy)=>{let s=0;for(const p of C)s+=boxMean(IL,W,H,p[0]+dx,p[1]+dy,a);let m=0;for(const p of M)m+=boxMean(IL,W,H,p[0]+dx,p[1]+dy,am);return s/C.length-(M.length?m/M.length:0)};
+  let best=[0,0],bv=f(0,0);if(noSearch)return{off:best,score:bv};
+  const R=g.sp*0.42,st=Math.max(1,g.sp/14);
+  for(let dy=-R;dy<=R+1e-6;dy+=st)for(let dx=-R;dx<=R+1e-6;dx+=st){const v=f(dx,dy);if(v>bv+1e-5){bv=v;best=[dx,dy]}}
+  const b2=best.slice();for(let dy=-st/2;dy<=st/2;dy+=st/2)for(let dx=-st/2;dx<=st/2;dx+=st/2){const v=f(b2[0]+dx,b2[1]+dy);if(v>bv+1e-5){bv=v;best=[b2[0]+dx,b2[1]+dy]}}
+  return{off:best,score:bv};
+}
+
+function evaluate(maps,blocks,nQ,opt){
+  const vals=new Array(nQ).fill(null),geo=new Array(nQ).fill(null),offs=[];let conf=0;
+  for(const b of blocks){
+    const a=alignBlock(b,maps,!opt.align);offs.push(a.off);conf+=a.score;
+    const g=blockGeom(b,maps.W,maps.H,a.off);
+    for(const it of g.items){const q=it.q-1;if(q<0||q>=nQ||vals[q])continue;
+      vals[q]=it.pts.map(p=>discMean(maps.DS,maps.W,maps.H,p[0],p[1],g.r));geo[q]={pts:it.pts,r:g.r}}
+  }
+  const md=vals.filter(Boolean).map(v=>Math.max(...v)-Math.min(...v)).sort((x,y)=>x-y);
+  const p60=md.length?md[Math.floor(md.length*0.6)]:0;
+  const T=Math.max(opt.sens,Math.min(0.32,0.45*p60));
+  const ans=[],marks=[],flag=[];
+  vals.forEach((v,q)=>{
+    if(!v){ans[q]='?';marks[q]=[];flag[q]=1;return}
+    const base=Math.min(...v),o=v.map((x,j)=>[x-base,j]).sort((x,y)=>y[0]-x[0]),d1=o[0][0],d2=o[1]?o[1][0]:0;
+    if(d1<T){ans[q]='-';marks[q]=[];flag[q]=d1>T*0.7?1:0}
+    else if(d2>=T&&d2>=0.55*d1){ans[q]='*';marks[q]=o.filter(x=>x[0]>=T&&x[0]>=0.55*d1).map(x=>x[1]);flag[q]=1}
+    else{ans[q]=LET[o[0][1]];marks[q]=[o[0][1]];flag[q]=(d1<T*1.35||d2>Math.max(T*0.7,0.4*d1))?1:0}
+  });
+  for(let q=0;q<nQ;q++)if(ans[q]===undefined){ans[q]='?';marks[q]=[];flag[q]=1}
+  return{vals,geo,ans,marks,flag,T,conf:blocks.length?conf/blocks.length:0,offs};
+}
+function shiftBlocks(blocks,offs,W,H){return blocks.map((b,i)=>{const o=offs[i]||[0,0],nb=clone(b);nb.c=nb.c.map(p=>[p[0]+o[0]/W,p[1]+o[1]/H]);return nb})}
+
+/* =========================================================
+   APP STATE
+   ========================================================= */
+const ST={queue:[],cur:null,total:0,done:0,stage:null,zoom:1,drag:null,tplNew:false,gridEdit:false,pick:null};
+const cv=$('#cv'),cx=cv.getContext('2d');
+let dragApi=null;
+
+function paperId(){return $('#selPaper').value||Object.keys(DB.papers)[0]}
+function paper(){return DB.papers[paperId()]}
+function nQ(){const p=paper();return p?p.kunci.length:0}
+
+function refreshSelectors(){
+  const sp=$('#selPaper'),ids=Object.keys(DB.papers);
+  if(!ids.includes(DB.settings.paper))DB.settings.paper=ids[0];
+  sp.innerHTML=ids.map(id=>`<option value="${esc(id)}">${esc(DB.papers[id].nama)} (${DB.papers[id].kunci.length} soalan)</option>`).join('');
+  sp.value=DB.settings.paper;
+  const st=$('#selTpl'),tids=Object.keys(DB.templates);
+  let h='';if(tids.length)h+=`<option value="__auto">Auto — pilih templat paling padan</option>`;
+  h+=tids.map(id=>`<option value="${esc(id)}">${esc(DB.templates[id].nama)}</option>`).join('');
+  h+=`<option value="__new">＋ Templat baharu (borang lain rupa)</option>`;st.innerHTML=h;
+  let v=DB.settings.tpl;if(!tids.length)v='__new';else if(v!=='__auto'&&!DB.templates[v])v='__auto';st.value=v;
+}
+
+/* =========================================================
+   QUEUE
+   ========================================================= */
+async function addFiles(files){
+  for(const f of files){
+    if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){
+      try{busy('Membaca PDF…');const lib=await loadPdfJs();const pdf=await lib.getDocument({data:await f.arrayBuffer()}).promise;
+        for(let p=1;p<=pdf.numPages;p++)ST.queue.push({kind:'pdf',pdf,page:p,name:`${f.name} · halaman ${p}`});ST.total+=pdf.numPages}
+      catch(e){toast(e.message||'PDF gagal dibaca',5000)}finally{busy(false)}
+    }else{ST.queue.push({kind:'img',file:f,name:f.name||'Gambar kamera'});ST.total++}
+  }
+  queueInfo();if(!ST.cur)nextSheet();
+}
+function queueInfo(){const q=$('#queueInfo');
+  if(ST.cur||ST.queue.length)q.innerHTML=`Helaian <b>${ST.done}</b> daripada <b>${ST.total}</b> · ${ST.queue.length} lagi dalam giliran`;
+  else if(ST.total)q.innerHTML=`<b>Selesai.</b> ${ST.total} helaian diproses. Lihat tab <a href="#" onclick="showTab('keputusan');return false">Keputusan</a>.`;
+}
+async function nextSheet(){
+  const it=ST.queue.shift();
+  if(!it){ST.cur=null;ST.stage=null;$('#work').hidden=true;queueInfo();return}
+  busy('Memuatkan helaian…');await tick();
+  try{
+    const src=it.kind==='pdf'?await renderPdfPage(it.pdf,it.page):await fileToCanvas(it.file);
+    const sd=src.getContext('2d',{willReadFrequently:true}).getImageData(0,0,src.width,src.height);
+    const det=detectPaper(src);
+    ST.cur={name:it.name,src,sd,quad:det.quad,low:det.low};ST.done++;queueInfo();busy(false);
+    const sel=$('#selTpl').value;ST.tplNew=(sel==='__new'||!Object.keys(DB.templates).length);
+    if(ST.tplNew||DB.settings.checkCorners||det.low)stageCorners();else runScan();
+  }catch(e){busy(false);console.error(e);toast('Helaian dilangkau: '+(e.message||e),4000);nextSheet()}
+}
+
+/* =========================================================
+   CANVAS DISPLAY + DRAGGING
+   ========================================================= */
+function setCanvas(w,h){if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}fitCanvas()}
+function fitCanvas(){const wrap=$('#cvwrap');if(!cv.width)return;const ww=wrap.clientWidth||600;
+  const base=Math.min(ww,window.innerHeight*0.78*cv.width/cv.height);cv.style.width=Math.round(base*ST.zoom)+'px';cv.style.height='auto'}
+function sc(){const r=cv.getBoundingClientRect();return cv.width/(r.width||cv.width)}
+let rafP=false;function sched(){if(rafP)return;rafP=true;requestAnimationFrame(()=>{rafP=false;render()})}
+(function attachDrag(){
+  let act=null;
+  const pos=(X,Y)=>{const r=cv.getBoundingClientRect();return[(X-r.left)*cv.width/r.width,(Y-r.top)*cv.height/r.height]};
+  const hit=(x,y)=>{if(!dragApi)return null;const R=26*sc();let best=null,bd=R*R;for(const h of dragApi.handles()){const d=(h.x-x)**2+(h.y-y)**2;if(d<bd){bd=d;best=h}}return best};
+  const start=(X,Y)=>{const[x,y]=pos(X,Y);const h=hit(x,y);if(!h)return false;act={h,dx:h.x-x,dy:h.y-y};ST.drag={x:h.x,y:h.y};sched();return true};
+  const move=(X,Y)=>{if(!act)return;const[x,y]=pos(X,Y);const nx=x+act.dx,ny=y+act.dy;ST.drag={x:nx,y:ny};dragApi.move(act.h.id,nx,ny)};
+  const end=()=>{if(!act)return;act=null;ST.drag=null;dragApi&&dragApi.end&&dragApi.end();sched()};
+  cv.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const t=e.touches[0];if(start(t.clientX,t.clientY))e.preventDefault()},{passive:false});
+  cv.addEventListener('touchmove',e=>{if(!act)return;e.preventDefault();const t=e.touches[0];move(t.clientX,t.clientY)},{passive:false});
+  cv.addEventListener('touchend',end);cv.addEventListener('touchcancel',end);
+  cv.addEventListener('mousedown',e=>{if(start(e.clientX,e.clientY)){e.preventDefault();
+    const mm=ev=>move(ev.clientX,ev.clientY),mu=()=>{window.removeEventListener('mousemove',mm);window.removeEventListener('mouseup',mu);end()};
+    window.addEventListener('mousemove',mm);window.addEventListener('mouseup',mu)}});
+  cv.addEventListener('mousemove',e=>{if(act)return;const[x,y]=pos(e.clientX,e.clientY);cv.style.cursor=hit(x,y)?'grab':'default'});
+})();
+
+function handleDot(x,y,label,col,s){
+  cx.beginPath();cx.arc(x,y,11*s,0,7);cx.fillStyle='rgba(255,255,255,.92)';cx.fill();cx.lineWidth=3*s;cx.strokeStyle=col;cx.stroke();
+  cx.beginPath();cx.arc(x,y,2.2*s,0,7);cx.fillStyle=col;cx.fill();
+  if(label){cx.font=`700 ${13*s}px system-ui,sans-serif`;const tw=cx.measureText(label).width;const bx=x+14*s,by=y-24*s;
+    cx.fillStyle=col;roundRect(bx,by,tw+10*s,18*s,5*s);cx.fill();cx.fillStyle='#fff';cx.textBaseline='middle';cx.fillText(label,bx+5*s,by+9*s)}
+}
+function roundRect(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function loupe(){
+  if(!ST.drag)return;const s=sc(),L=150*s,z=30*s,{x,y}=ST.drag,lx=x<cv.width/2?cv.width-L-12*s:12*s,ly=12*s;
+  cx.save();cx.beginPath();cx.arc(lx+L/2,ly+L/2,L/2,0,7);cx.closePath();cx.fillStyle='#fff';cx.fill();cx.clip();
+  cx.imageSmoothingEnabled=true;cx.drawImage(cv,x-z,y-z,2*z,2*z,lx,ly,L,L);cx.restore();
+  cx.lineWidth=3*s;cx.strokeStyle='#2f3e9e';cx.beginPath();cx.arc(lx+L/2,ly+L/2,L/2,0,7);cx.stroke();
+  cx.lineWidth=1.5*s;cx.strokeStyle='#e0245e';cx.beginPath();cx.moveTo(lx+L/2-14*s,ly+L/2);cx.lineTo(lx+L/2+14*s,ly+L/2);cx.moveTo(lx+L/2,ly+L/2-14*s);cx.lineTo(lx+L/2,ly+L/2+14*s);cx.stroke();
+}
+
+function render(){
+  const c=ST.cur;if(!c)return;const s=sc();
+  if(ST.stage==='corners'){
+    setCanvas(c.src.width,c.src.height);cx.drawImage(c.src,0,0);const q=c.quad;
+    cx.save();cx.fillStyle='rgba(15,20,35,.45)';cx.beginPath();cx.rect(0,0,cv.width,cv.height);cx.moveTo(q[0][0],q[0][1]);for(let i=3;i>=0;i--)cx.lineTo(q[i][0],q[i][1]);cx.closePath();cx.fill('evenodd');cx.restore();
+    cx.lineWidth=3*s;cx.strokeStyle='#5b8cff';cx.beginPath();q.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.closePath();cx.stroke();
+    loupe();q.forEach((p,i)=>handleDot(p[0],p[1],['1 Atas kiri','2 Atas kanan','3 Bawah kanan','4 Bawah kiri'][i],'#2f3e9e',s));
+    return;
+  }
+  if(!c.wcv)return;
+  setCanvas(c.wcv.width,c.wcv.height);cx.drawImage(c.wcv,0,0);
+  const editing=ST.stage==='template'||(ST.stage==='result'&&ST.gridEdit);
+  const blocks=ST.stage==='template'?ST.edit.blocks:c.blocks;
+  if(editing){
+    const{W,H}=c.maps;
+    blocks.forEach(b=>{const g=blockGeom(b,W,H);cx.setLineDash([8*s,6*s]);cx.lineWidth=1.5*s;cx.strokeStyle='rgba(47,62,158,.8)';cx.beginPath();g.c.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.closePath();cx.stroke();cx.setLineDash([]);
+      cx.lineWidth=Math.max(1,1.4*s);cx.strokeStyle='rgba(47,62,158,.9)';for(const it of g.items)for(const p of it.pts){cx.beginPath();cx.arc(p[0],p[1],g.r,0,7);cx.stroke()}});
+    if(!ST.drag&&c.res)drawMarks(s,true);
+    loupe();
+    blockHandles(blocks,W,H).forEach(h=>handleDot(h.x,h.y,h.label,h.col,s));
+  }else drawMarks(s,false);
+}
+function drawMarks(s,light){
+  const c=ST.cur,res=c.res,key=paper().kunci;
+  res.geo.forEach((g,q)=>{if(!g)return;const a=c.ans[q],kk=LET.indexOf(key[q]),ok=a===key[q];
+    const mk=c.manual.has(q)?(LET.includes(a)&&a.length===1?[LET.indexOf(a)]:[]):res.marks[q];
+    if(!light){cx.lineWidth=Math.max(1,1.2*s);cx.strokeStyle='rgba(47,62,158,.35)';for(const p of g.pts){cx.beginPath();cx.arc(p[0],p[1],g.r*1.15,0,7);cx.stroke()}}
+    const col=a==='*'?'#e08a00':ok?'#13803e':'#c8312a';
+    mk.forEach(j=>{const p=g.pts[j];if(!p)return;cx.beginPath();cx.arc(p[0],p[1],g.r*1.3,0,7);cx.fillStyle=col+'55';cx.fill();cx.lineWidth=3*s;cx.strokeStyle=col;cx.stroke()});
+    if(!ok&&kk>=0&&g.pts[kk]){const p=g.pts[kk];cx.setLineDash([5*s,4*s]);cx.lineWidth=2.5*s;cx.strokeStyle='#13803e';cx.beginPath();cx.arc(p[0],p[1],g.r*1.75,0,7);cx.stroke();cx.setLineDash([])}
+    if(!light||ST.stage==='result'){const p=g.pts[0],fs=Math.max(10,g.r*1.25);cx.font=`700 ${fs}px system-ui,sans-serif`;cx.textAlign='right';cx.textBaseline='middle';
+      const lb=String(q+1),tw=cx.measureText(lb).width;cx.fillStyle=c.res.flag[q]&&!c.manual.has(q)?'#ffd27a':'rgba(255,255,255,.88)';roundRect(p[0]-g.r*2-tw-6,p[1]-fs*0.62,tw+8,fs*1.24,4);cx.fill();
+      cx.fillStyle=ok?'#13803e':'#c8312a';cx.fillText(lb,p[0]-g.r*2-2,p[1]+1);cx.textAlign='left'}
+  });
+}
+function blockHandles(blocks,W,H){const hs=[];
+  blocks.forEach((b,bi)=>{const c=b.c.map(p=>[p[0]*W,p[1]*H]);
+    c.forEach((p,ci)=>hs.push({id:[bi,'c',ci],x:p[0],y:p[1],label:(blocks.length>1?`B${bi+1}: `:'')+cornerLabel(b,ci),col:'#2f3e9e'}));
+    if((b.K||1)>1&&b.m>1){const p=bPoint(b,c,0,0,b.m-1);hs.push({id:[bi,'r'],x:p[0],y:p[1],label:`${b.q0}${LET[b.m-1]}`,col:'#d97706'})}
+    const m=[(c[0][0]+c[1][0]+c[2][0]+c[3][0])/4,(c[0][1]+c[1][1]+c[2][1]+c[3][1])/4];hs.push({id:[bi,'m'],x:m[0],y:m[1],label:'✥ alih',col:'#475569'});
+  });return hs}
+function moveHandle(blocks,id,x,y,W,H){const b=blocks[id[0]];if(!b)return;
+  if(id[1]==='c'){b.c[id[2]]=[clamp(x/W,-0.05,1.05),clamp(y/H,-0.05,1.05)];return}
+  if(id[1]==='m'){const mx=b.c.reduce((a,p)=>a+p[0],0)/4,my=b.c.reduce((a,p)=>a+p[1],0)/4,dx=x/W-mx,dy=y/H-my;b.c=b.c.map(p=>[p[0]+dx,p[1]+dy]);return}
+  if(id[1]==='r'){const c=b.c.map(p=>[p[0]*W,p[1]*H]),e0=c[0],e1=b.arah==='v'?c[3]:c[1],ex=e1[0]-e0[0],ey=e1[1]-e0[1];
+    let s=((x-e0[0])*ex+(y-e0[1])*ey)/(ex*ex+ey*ey||1);s=clamp(s,0.02,0.95);const K=b.K||1;b.rho=clamp(s*(K-1)/(1-s),0.05,0.98)}
+}
+function blocksDrag(get,onEnd){return{handles:()=>blockHandles(get(),ST.cur.maps.W,ST.cur.maps.H),move:(id,x,y)=>{moveHandle(get(),id,x,y,ST.cur.maps.W,ST.cur.maps.H);sched()},end:onEnd}}
+
+/* =========================================================
+   STAGES
+   ========================================================= */
+function showWork(t,sub){$('#work').hidden=false;$('#stTitle').textContent=t;$('#stSub').textContent=sub||'';$('#tips').hidden=true}
+function panel(html){$('#panel').innerHTML=html}
+function on(id,ev,fn){const e=document.getElementById(id);if(e)e.addEventListener(ev,fn)}
+
+function stageCorners(){
+  ST.stage='corners';ST.gridEdit=false;const c=ST.cur;
+  showWork('Bucu kertas',c.name);
+  panel(`<p class="lead">Seret 4 titik biru ke <b>bucu kertas OMR</b> (atau bucu kotak jawapan). Gunakan kanta pembesar yang muncul semasa menyeret.</p>
+    ${c.low?'<p class="lead" style="color:var(--warn)">Kertas kurang jelas dikesan — sila laraskan bucu.</p>':''}
+    <div class="row"><button class="btn sm" id="bRot">↻ Putar 90°</button><button class="btn sm" id="bRedet">Kesan semula</button><button class="btn sm" id="bFull">Guna seluruh gambar</button></div>
+    <button class="btn primary big block" id="bGo">${ST.tplNew?'Teruskan: bina templat →':'Teruskan: tanda →'}</button>
+    <button class="btn ghost block" id="bSkip">Langkau helaian ini</button>`);
+  dragApi={handles:()=>c.quad.map((p,i)=>({id:i,x:p[0],y:p[1]})),move:(i,x,y)=>{c.quad[i]=[clamp(x,0,c.src.width),clamp(y,0,c.src.height)];sched()}};
+  on('bRot','click',()=>{c.quad=[c.quad[1],c.quad[2],c.quad[3],c.quad[0]];sched();toast('Diputar 90° — titik 1 mesti di bucu atas kiri borang')});
+  on('bRedet','click',()=>{c.quad=detectPaper(c.src).quad;sched()});
+  on('bFull','click',()=>{c.quad=[[0,0],[c.src.width,0],[c.src.width,c.src.height],[0,c.src.height]];sched()});
+  on('bGo','click',()=>{if(ST.tplNew){const eb=ST.editBack;ST.editBack=null;eb?stageTemplate(eb.id,eb.blocks,eb.nama):stageTemplate(null)}else runScan()});
+  on('bSkip','click',()=>nextSheet());
+  ST.zoom=1;render();fitCanvas();
+}
+
+function defaultBlock(){const p=paper();return{q0:1,n:Math.max(1,p.kunci.length),K:1,m:p.opsyen||4,rho:0.6,arah:'h',c:[[0.3,0.3],[0.6,0.3],[0.6,0.88],[0.3,0.88]]}}
+
+function stageTemplate(editId,fromBlocks,nama){
+  ST.stage='template';ST.gridEdit=false;const c=ST.cur,t=editId?DB.templates[editId]:null;
+  ST.edit={id:editId,nama:nama||(t?t.nama:`Borang ${Object.keys(DB.templates).length+1}`),aspect:t?t.aspect:Math.round(estAspect(c.quad)*1000)/1000,blocks:clone(fromBlocks||(t?t.blocks:[defaultBlock()]))};
+  prepWarp(ST.edit.aspect);liveEval();
+  showWork(editId?'Edit templat':'Bina templat borang',c.name);
+  dragApi=blocksDrag(()=>ST.edit.blocks,()=>{liveEval();tplSummary();sched()});
+  tplPanel();ST.zoom=1;render();fitCanvas();
+}
+function prepWarp(aspect){const c=ST.cur,W=1200,H=Math.round(W*aspect);const w=warp(c.sd,c.quad,W,H);c.wcv=w.canvas;c.maps=buildMaps(w.img,DB.settings.mode)}
+function liveEval(){const c=ST.cur;c.res=evaluate(c.maps,ST.edit.blocks,nQ(),{align:false,sens:DB.settings.sens});c.ans=c.res.ans.slice();c.manual=new Set()}
+const DIAGRAM=`<svg width="230" height="112" viewBox="0 0 230 112" aria-hidden="true" font-family="system-ui" font-size="10" font-weight="700">
+${[0,1].map(k=>[0,1,2,3].map(i=>[0,1,2,3].map(j=>`<circle cx="${22+k*110+j*18}" cy="${22+i*22}" r="6" fill="none" stroke="#8a93a8" stroke-width="1.4"/>`).join('')).join('')).join('')}
+<circle cx="22" cy="22" r="7" fill="#2f3e9e"/><text x="18" y="10" fill="#2f3e9e">1</text>
+<circle cx="186" cy="22" r="7" fill="#2f3e9e"/><text x="194" y="12" fill="#2f3e9e">2</text>
+<circle cx="186" cy="88" r="7" fill="#2f3e9e"/><text x="196" y="106" fill="#2f3e9e">3</text>
+<circle cx="22" cy="88" r="7" fill="#2f3e9e"/><text x="8" y="106" fill="#2f3e9e">4</text>
+<circle cx="76" cy="22" r="7" fill="#d97706"/><text x="72" y="10" fill="#d97706">R</text></svg>`;
+function tplPanel(){
+  const e=ST.edit;
+  panel(`<p class="lead">Seret titik <b style="color:var(--pri)">biru</b> tepat ke tengah gelembung yang dilabel (cth. <b>1A</b> = soalan 1 pilihan A). Jika borang ada beberapa lajur soalan, tetapkan <b>Lajur</b> dan seret titik <b style="color:#d97706">jingga</b> ke pilihan terakhir soalan pertama.</p>
+    <div class="diagram">${DIAGRAM}</div>
+    <div id="tplSum" class="flagline"></div>
+    <div id="blkList"></div>
+    <div class="row"><button class="btn sm" id="bAddBlk">＋ Tambah blok</button><button class="btn sm" id="bSnap">Auto-jajar halus</button></div>
+    <label class="fld">Nama templat<input id="tplName" value="${esc(e.nama)}"></label>
+    <button class="btn primary big block" id="bSaveTpl">Simpan templat &amp; tanda →</button>
+    <div class="row"><button class="btn ghost" id="bBackCorner">← Laras bucu kertas</button><button class="btn ghost" id="bCancelTpl">Batal</button></div>`);
+  blkList();tplSummary();
+  on('bAddBlk','click',()=>{const last=e.blocks[e.blocks.length-1];const nb=last?clone(last):defaultBlock();
+    if(last){const span=(last.K||1)*last.n;nb.q0=last.q0+span;const dx=(last.c[1][0]-last.c[0][0])+0.06;nb.c=nb.c.map(p=>[clamp(p[0]+dx,0,1),p[1]])}
+    e.blocks.push(nb);liveEval();blkList();tplSummary();sched()});
+  on('bSnap','click',()=>{const c=ST.cur;e.blocks=e.blocks.map(b=>{const a=alignBlock(b,c.maps);return shiftBlocks([b],[a.off],c.maps.W,c.maps.H)[0]});liveEval();tplSummary();sched();toast('Grid dijajar ke gelembung terdekat')});
+  on('tplName','input',ev=>e.nama=ev.target.value);
+  on('bSaveTpl','click',saveTemplate);
+  on('bBackCorner','click',()=>{ST.tplNew=true;ST.editBack=e;stageCorners()});
+  on('bCancelTpl','click',()=>{if(Object.keys(DB.templates).length&&!e.id){ST.tplNew=false;if($('#selTpl').value==='__new')$('#selTpl').value='__auto';runScan()}else if(e.id)runScan(e.id);else nextSheet()});
+}
+function blkList(){
+  const e=ST.edit;
+  $('#blkList').innerHTML=e.blocks.map((b,i)=>{const last=b.q0+(b.K||1)*b.n-1;return`<div class="blk" data-i="${i}" style="margin-bottom:8px">
+    <div class="blk-h"><span>Blok ${i+1} · soalan ${b.q0}–${last}</span>${e.blocks.length>1?`<button class="btn sm danger" data-del="${i}">Buang</button>`:''}</div>
+    <div class="g5">
+      <label class="fld">Soalan mula<input type="number" min="1" data-f="q0" value="${b.q0}"></label>
+      <label class="fld">Soalan / lajur<input type="number" min="1" max="120" data-f="n" value="${b.n}"></label>
+      <label class="fld">Lajur<input type="number" min="1" max="12" data-f="K" value="${b.K||1}"></label>
+      <label class="fld">Pilihan<select data-f="m">${[3,4,5].map(m=>`<option ${m===b.m?'selected':''}>${m}</option>`).join('')}</select></label>
+      <label class="fld" style="grid-column:span 2">Susunan pilihan<select data-f="arah"><option value="h" ${b.arah!=='v'?'selected':''}>Mendatar (A B C D →)</option><option value="v" ${b.arah==='v'?'selected':''}>Menegak (A B C D ↓)</option></select></label>
+    </div></div>`}).join('');
+  $('#blkList').querySelectorAll('[data-f]').forEach(inp=>inp.addEventListener('change',ev=>{
+    const i=+ev.target.closest('.blk').dataset.i,f=ev.target.dataset.f,b=e.blocks[i];
+    if(f==='arah')b.arah=ev.target.value;else{let v=Math.round(+ev.target.value)||1;
+      if(f==='K'){v=clamp(v,1,12);const tot=b.n*(b.K||1);b.K=v;b.n=Math.max(1,Math.ceil(tot/v))}
+      else if(f==='n')b.n=clamp(v,1,120);else if(f==='m')b.m=clamp(v,2,5);else if(f==='q0')b.q0=Math.max(1,v)}
+    liveEval();blkList();tplSummary();sched()}));
+  $('#blkList').querySelectorAll('[data-del]').forEach(bt=>bt.addEventListener('click',()=>{e.blocks.splice(+bt.dataset.del,1);liveEval();blkList();tplSummary();sched()}));
+}
+function tplSummary(){const c=ST.cur,a=c.ans,key=paper().kunci;let ok=0,bl=0,db=0,un=0;a.forEach((x,i)=>{if(x===key[i])ok++;else if(x==='-')bl++;else if(x==='*')db++;else if(x==='?')un++});
+  const el=$('#tplSum');if(el)el.innerHTML=`<span>Pratonton: <b>${ok}/${key.length}</b> sepadan skema</span><span>Kosong <b>${bl}</b></span><span>Ganda <b>${db}</b></span>${un?`<span style="color:var(--bad)">Belum dipetakan <b>${un}</b></span>`:''}`}
+function saveTemplate(){
+  const e=ST.edit,id=e.id||uid();const nama=(e.nama||'').trim()||'Borang';
+  DB.templates[id]={nama,aspect:e.aspect,blocks:clone(e.blocks)};DB.settings.tpl=id;save();refreshSelectors();$('#selTpl').value=id;ST.tplNew=false;
+  toast('Templat "'+nama+'" disimpan');runScan(id);
+}
+
+function scanWith(t){const c=ST.cur,W=1200,H=Math.round(W*(t.aspect||1.414));const w=warp(c.sd,c.quad,W,H);const maps=buildMaps(w.img,DB.settings.mode);
+  const res=evaluate(maps,t.blocks,nQ(),{align:DB.settings.autoAlign,sens:DB.settings.sens});return{wcv:w.canvas,maps,res}}
+async function runScan(forceId){
+  busy('Menanda…');await tick();
+  try{
+    const sel=forceId||$('#selTpl').value,ids=sel==='__auto'||sel==='__new'?Object.keys(DB.templates):[sel];let best=null;
+    for(const id of ids){const t=DB.templates[id];if(!t)continue;const r=scanWith(t);r.id=id;if(!best||r.res.conf>best.res.conf)best=r}
+    busy(false);
+    if(!best){ST.tplNew=true;stageTemplate(null);return}
+    const c=ST.cur;Object.assign(c,{tplId:best.id,wcv:best.wcv,maps:best.maps,res:best.res,auto:sel==='__auto'});
+    c.blocks=shiftBlocks(DB.templates[best.id].blocks,best.res.offs,best.maps.W,best.maps.H);
+    c.ans=best.res.ans.slice();c.manual=new Set();stageResult();
+  }catch(e){busy(false);console.error(e);toast('Ralat: '+(e.message||e),4000)}
+}
+function reEval(){const c=ST.cur;c.res=evaluate(c.maps,c.blocks,nQ(),{align:false,sens:DB.settings.sens});c.ans=c.res.ans.slice();c.manual=new Set();resultInfo();sched()}
+
+function stageResult(){
+  ST.stage='result';ST.gridEdit=false;ST.pick=null;dragApi=null;const c=ST.cur,t=DB.templates[c.tplId];
+  showWork('Semak & simpan',c.name);
+  const nextNo=DB.results.length+1;
+  panel(`<div class="scorebox"><div class="mk"><b id="rB">0</b> / <span id="rN">0</span></div><div class="pc" id="rP">0%</div></div>
+    <div class="flagline" id="rFlag"></div>
+    <div class="grid2"><label class="fld">Nama murid<input id="rNama" placeholder="Murid ${nextNo}" autocomplete="off"></label><label class="fld">Kelas<input id="rKelas" value="${esc(DB.settings.kelas)}" autocomplete="off"></label></div>
+    <button class="btn ok big block" id="bSave">Simpan &amp; seterusnya →</button>
+    <div class="legend"><span><i style="background:var(--ok)"></i>betul</span><span><i style="background:var(--bad)"></i>salah</span><span><i style="border:2px dashed var(--ok)"></i>jawapan sebenar</span><span><i style="background:#f0a000"></i>perlu semak</span></div>
+    <div class="chips" id="rChips"></div>
+    <div class="picker" id="picker" hidden></div>
+    <details class="more"><summary>Imbasan tidak tepat? Laraskan</summary>
+      <label class="fld">Templat<select id="rTpl">${Object.keys(DB.templates).map(id=>`<option value="${esc(id)}" ${id===c.tplId?'selected':''}>${esc(DB.templates[id].nama)}</option>`).join('')}</select></label>
+      <div class="row"><button class="btn sm" id="bGrid">Laras grid</button><button class="btn sm" id="bCorner">Laras bucu kertas</button><button class="btn sm" id="bEditTpl">Edit templat</button><button class="btn sm" id="bNewTpl">＋ Templat baharu</button></div>
+      <div class="row" id="gridRow" hidden><button class="btn sm primary" id="bGridSave">Simpan grid ke templat</button><span class="muted" style="font-size:12px">Seret titik biru; markah dikira semula.</span></div>
+      <label class="fld">Kepekaan tanda <input type="range" id="rSens" min="0.06" max="0.30" step="0.01" value="${DB.settings.sens}"></label>
+    </details>
+    <button class="btn ghost block" id="bSkip">Langkau helaian (tidak disimpan)</button>
+    <p class="hint" style="margin:0">Templat: <b>${esc(t?t.nama:'-')}</b>${c.auto?' (dipilih automatik)':''}</p>`);
+  resultInfo();
+  on('bSave','click',saveResult);on('bSkip','click',()=>nextSheet());
+  on('rNama','keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveResult()}});
+  on('rTpl','change',e=>runScan(e.target.value));
+  on('bGrid','click',()=>{ST.gridEdit=!ST.gridEdit;$('#bGrid').classList.toggle('on',ST.gridEdit);$('#gridRow').hidden=!ST.gridEdit;dragApi=ST.gridEdit?blocksDrag(()=>c.blocks,reEval):null;sched()});
+  on('bGridSave','click',()=>{const t=DB.templates[c.tplId];if(!t)return;t.blocks=clone(c.blocks);save();toast('Grid templat dikemas kini')});
+  on('bCorner','click',()=>{ST.tplNew=false;stageCorners()});
+  on('bEditTpl','click',()=>stageTemplate(c.tplId,c.blocks));
+  on('bNewTpl','click',()=>{ST.tplNew=true;stageCorners()});
+  on('rSens','change',e=>{DB.settings.sens=+e.target.value;save();reEval()});
+  ST.zoom=1;render();fitCanvas();
+}
+function resultInfo(){
+  const c=ST.cur,key=paper().kunci,n=key.length;let ok=0,bl=0,db=0,fl=0;
+  const chips=c.ans.map((a,q)=>{const good=a===key[q];if(good)ok++;if(a==='-'||a==='?')bl++;if(a==='*')db++;const f=c.res.flag[q]&&!c.manual.has(q);if(f)fl++;
+    const disp=a==='-'||a==='?'?'–':a==='*'?'✱':a;
+    return`<button class="chip ${good?'ok':'bad'} ${f?'flag':''} ${c.manual.has(q)?'man':''} ${ST.pick===q?'sel':''}" data-q="${q}" title="Skema: ${key[q]}"><span class="n">${q+1}</span><b>${disp}</b></button>`}).join('');
+  $('#rB').textContent=ok;$('#rN').textContent=n;$('#rP').textContent=(n?Math.round(ok/n*100):0)+'%';
+  $('#rFlag').innerHTML=`<span>Salah <b>${n-ok}</b></span><span>Kosong <b>${bl}</b></span><span>Ganda <b>${db}</b></span>${fl?`<span style="color:var(--warn)">⚠ Perlu semak <b>${fl}</b></span>`:''}`;
+  $('#rChips').innerHTML=chips;
+  $('#rChips').querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>openPicker(+ch.dataset.q)));
+}
+function openPicker(q){
+  const c=ST.cur,m=(paper().opsyen||4),pk=$('#picker');ST.pick=q;
+  pk.hidden=false;pk.innerHTML=`<b style="margin-right:4px">S${q+1}:</b>`+LET.slice(0,m).split('').map(L=>`<button class="btn sm ${c.ans[q]===L?'on':''}" data-a="${L}">${L}</button>`).join('')+
+    `<button class="btn sm ${c.ans[q]==='-'?'on':''}" data-a="-">Kosong</button><button class="btn sm ${c.ans[q]==='*'?'on':''}" data-a="*">Ganda</button><button class="btn sm ghost" data-a="x">Tutup</button>`;
+  pk.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',()=>{const a=b.dataset.a;if(a!=='x'){c.ans[q]=a;c.manual.add(q)}ST.pick=null;pk.hidden=true;resultInfo();sched()}));
+  resultInfo();
+}
+function saveResult(){
+  const c=ST.cur,pid=paperId(),key=paper().kunci;
+  const nama=$('#rNama').value.trim()||('Murid '+(DB.results.length+1)),kelas=$('#rKelas').value.trim();DB.settings.kelas=kelas;
+  const jaw=c.ans.map(a=>a==='?'?'-':a).join('');
+  DB.results.push({id:uid(),paper:pid,nama,kelas,jawapan:jaw,tpl:c.tplId,t:Date.now()});save();
+  let ok=0;for(let i=0;i<key.length;i++)if(jaw[i]===key[i])ok++;
+  toast(`Disimpan: ${nama} · ${ok}/${key.length}`);renderResults();nextSheet();
+}
+
+/* =========================================================
+   KEPUTUSAN
+   ========================================================= */
+function scoreOf(r){const p=DB.papers[r.paper];if(!p)return{b:0,n:0,pc:0};let b=0;for(let i=0;i<p.kunci.length;i++)if(r.jawapan[i]===p.kunci[i])b++;return{b,n:p.kunci.length,pc:p.kunci.length?b/p.kunci.length*100:0}}
+function fillFilters(){
+  const opts=Object.keys(DB.papers).map(id=>`<option value="${esc(id)}">${esc(DB.papers[id].nama)}</option>`).join('');
+  const fp=$('#fPaper'),ap=$('#aPaper'),v1=fp.value,v2=ap.value;
+  fp.innerHTML=opts;ap.innerHTML=opts;fp.value=DB.papers[v1]?v1:paperId();ap.value=DB.papers[v2]?v2:paperId();
+  const fill=(sel,pid)=>{const v=sel.value;const ks=[...new Set(DB.results.filter(r=>r.paper===pid).map(r=>r.kelas).filter(Boolean))].sort();
+    sel.innerHTML=`<option value="">Semua kelas</option>`+ks.map(k=>`<option ${k===v?'selected':''}>${esc(k)}</option>`).join('')};
+  fill($('#fKelas'),fp.value);fill($('#aKelas'),ap.value);
+}
+function filtered(){const pid=$('#fPaper').value,k=$('#fKelas').value,q=$('#fCari').value.trim().toLowerCase();
+  return DB.results.filter(r=>r.paper===pid&&(!k||r.kelas===k)&&(!q||r.nama.toLowerCase().includes(q)))}
+let openRow=null;
+function renderResults(){
+  fillFilters();const rows=filtered(),p=DB.papers[$('#fPaper').value];
+  const sc=rows.map(scoreOf),pcs=sc.map(s=>s.pc);
+  const avg=pcs.length?pcs.reduce((a,b)=>a+b,0)/pcs.length:0;
+  $('#stats').innerHTML=[[rows.length,'Murid'],[avg.toFixed(1)+'%','Purata'],[pcs.length?Math.max(...pcs).toFixed(0)+'%':'–','Tertinggi'],[pcs.length?Math.min(...pcs).toFixed(0)+'%':'–','Terendah']].map(([v,l])=>`<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+  if(!rows.length){$('#tblRes').innerHTML=`<tr><td class="empty">Belum ada keputusan untuk kertas ini. Imbas kertas dalam tab Imbas.</td></tr>`;return}
+  const key=p.kunci;
+  $('#tblRes').innerHTML=`<thead><tr><th>#</th><th>Nama</th><th>Kelas</th><th class="num">Markah</th><th class="num">%</th><th class="num">Kosong/Ganda</th><th>Masa</th><th></th></tr></thead><tbody>`+
+    rows.map((r,i)=>{const s=sc[i],bl=[...r.jawapan].filter(x=>x==='-'||x==='*').length;const d=new Date(r.t);
+      const det=openRow===r.id?`<tr class="det"><td colspan="8"><div class="chips">${[...key].map((k,q)=>{const a=r.jawapan[q]||'-';return`<span class="chip ${a===k?'ok':'bad'}" title="Skema ${k}"><span class="n">${q+1}</span><b>${a==='-'?'–':a==='*'?'✱':a}</b></span>`}).join('')}</div></td></tr>`:'';
+      return`<tr><td>${i+1}</td><td><a href="#" data-open="${r.id}">${esc(r.nama)}</a></td><td>${esc(r.kelas)}</td><td class="num"><b>${s.b}</b>/${s.n}</td><td class="num">${s.pc.toFixed(0)}</td><td class="num">${bl||''}</td><td class="muted">${d.toLocaleDateString('ms-MY')} ${d.toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})}</td><td><button class="btn sm ghost" data-ren="${r.id}" title="Tukar nama">✎</button><button class="btn sm ghost" data-del="${r.id}" title="Padam">✕</button></td></tr>${det}`}).join('')+'</tbody>';
+  $('#tblRes').querySelectorAll('[data-open]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();openRow=openRow===a.dataset.open?null:a.dataset.open;renderResults()}));
+  $('#tblRes').querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{const r=DB.results.find(x=>x.id===b.dataset.del);if(r&&confirm('Padam keputusan '+r.nama+'?')){DB.results=DB.results.filter(x=>x!==r);save();renderResults()}}));
+  $('#tblRes').querySelectorAll('[data-ren]').forEach(b=>b.addEventListener('click',()=>{const r=DB.results.find(x=>x.id===b.dataset.ren);if(!r)return;const n=prompt('Nama murid:',r.nama);if(n===null)return;const k=prompt('Kelas:',r.kelas);r.nama=n.trim()||r.nama;if(k!==null)r.kelas=k.trim();save();renderResults()}));
+}
+function table(rows){const p=DB.papers[$('#fPaper').value],n=p.kunci.length;
+  const head=['Bil','Nama','Kelas','Markah','Jumlah','Peratus',...Array.from({length:n},(_,i)=>'S'+(i+1))];
+  return[head,...rows.map((r,i)=>{const s=scoreOf(r);return[i+1,r.nama,r.kelas,s.b,s.n,s.pc.toFixed(1),...Array.from({length:n},(_,q)=>{const a=r.jawapan[q]||'-';return a==='*'?'GANDA':a==='-'?'':a})]})]}
+function exportCsv(){const rows=filtered();if(!rows.length)return toast('Tiada data');const t=table(rows);
+  const csv=t.map(r=>r.map(v=>{v=String(v);return/[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n');
+  download(`keputusan_${$('#fPaper').value}_${$('#fKelas').value||'semua'}.csv`,'﻿'+csv,'text/csv;charset=utf-8')}
+async function copyTsv(){const rows=filtered();if(!rows.length)return toast('Tiada data');const tsv=table(rows).map(r=>r.join('\t')).join('\n');
+  try{await navigator.clipboard.writeText(tsv);toast('Disalin. Tampal (paste) dalam Google Sheets / Excel.')}catch(e){download('keputusan.tsv',tsv,'text/tab-separated-values');toast('Salinan disekat — fail TSV dimuat turun.')}}
+
+/* =========================================================
+   ANALISIS ITEM
+   ========================================================= */
+function renderAnalisis(){
+  fillFilters();const pid=$('#aPaper').value,k=$('#aKelas').value,p=DB.papers[pid];if(!p)return;
+  const rows=DB.results.filter(r=>r.paper===pid&&(!k||r.kelas===k));const N=rows.length,m=p.opsyen||4;
+  if(!N){$('#tblItem').innerHTML=`<tr><td class="empty">Belum ada data.</td></tr>`;return}
+  let h=`<thead><tr><th>Soalan</th><th>Skema</th><th class="num">% betul</th><th></th><th>Tahap</th>${LET.slice(0,m).split('').map(L=>`<th class="num">${L}</th>`).join('')}<th class="num">Kosong</th><th class="num">Ganda</th></tr></thead><tbody>`;
+  for(let q=0;q<p.kunci.length;q++){const cnt={};let bl=0,db=0;rows.forEach(r=>{const a=r.jawapan[q]||'-';if(a==='-')bl++;else if(a==='*')db++;else cnt[a]=(cnt[a]||0)+1});
+    const key=p.kunci[q],ok=cnt[key]||0,pc=ok/N*100,lv=pc>=70?'mudah':pc>=40?'sederhana':'sukar';
+    let hot=null,hv=0;LET.slice(0,m).split('').forEach(L=>{if(L!==key&&(cnt[L]||0)>hv){hv=cnt[L];hot=L}});
+    h+=`<tr><td><b>${q+1}</b></td><td><b>${key}</b></td><td class="num">${pc.toFixed(0)}%</td><td><div class="bar"><i style="width:${pc}%"></i></div></td><td><span class="tag ${lv}">${lv[0].toUpperCase()+lv.slice(1)}</span></td>`+
+      LET.slice(0,m).split('').map(L=>`<td class="num opt-cell ${L===key?'key':''} ${L===hot&&hv>=ok&&hv>0?'hot':''}">${cnt[L]||0}</td>`).join('')+`<td class="num">${bl}</td><td class="num">${db}</td></tr>`}
+  $('#tblItem').innerHTML=h+'</tbody>';
+}
+
+/* =========================================================
+   TETAPAN
+   ========================================================= */
+function renderTetapan(){
+  $('#paperList').innerHTML=Object.keys(DB.papers).map(id=>{const p=DB.papers[id];
+    const kv=[...p.kunci].map((k,i)=>(i%10===0?`<br><span>${String(i+1).padStart(2,' ')}–${Math.min(i+10,p.kunci.length)}:</span> `:'')+`<b>${k}</b>`).join(' ').replace(/^<br>/,'');
+    return`<div class="blk" style="margin-bottom:10px" data-p="${esc(id)}">
+      <div class="grid2"><label class="fld">Nama kertas<input data-pf="nama" value="${esc(p.nama)}"></label>
+      <label class="fld">Bil. pilihan<select data-pf="opsyen">${[3,4,5].map(m=>`<option ${m===(p.opsyen||4)?'selected':''}>${m}</option>`).join('')}</select></label></div>
+      <label class="fld" style="margin-top:8px">Skema (${p.kunci.length} soalan)<input data-pf="kunci" value="${esc(p.kunci)}" spellcheck="false" autocapitalize="characters" style="font-family:ui-monospace,Menlo,monospace;letter-spacing:2px"></label>
+      <div class="keyview" style="margin-top:6px">${kv}</div>
+      <div class="row mt"><button class="btn sm danger" data-pdel="${esc(id)}">Padam kertas</button></div></div>`}).join('');
+  $('#paperList').querySelectorAll('[data-pf]').forEach(inp=>inp.addEventListener('change',e=>{const id=e.target.closest('[data-p]').dataset.p,f=e.target.dataset.pf,p=DB.papers[id];
+    if(f==='kunci'){const v=e.target.value.toUpperCase().replace(/[^A-E]/g,'');if(!v){toast('Skema kosong tidak dibenarkan');renderTetapan();return}p.kunci=v}
+    else if(f==='opsyen')p.opsyen=+e.target.value;else p.nama=e.target.value.trim()||p.nama;
+    save();refreshSelectors();renderTetapan();toast('Skema dikemas kini')}));
+  $('#paperList').querySelectorAll('[data-pdel]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.pdel;if(Object.keys(DB.papers).length<2)return toast('Sekurang-kurangnya satu kertas diperlukan');
+    const n=DB.results.filter(r=>r.paper===id).length;if(!confirm(`Padam kertas "${DB.papers[id].nama}"${n?` dan ${n} keputusannya`:''}?`))return;delete DB.papers[id];DB.results=DB.results.filter(r=>r.paper!==id);save();refreshSelectors();renderTetapan()}));
+  const tids=Object.keys(DB.templates);
+  $('#tplList').innerHTML=tids.length?tids.map(id=>{const t=DB.templates[id];const qs=t.blocks.map(b=>`${b.q0}–${b.q0+(b.K||1)*b.n-1}`).join(', ');
+    return`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><input class="inp grow" data-tn="${esc(id)}" value="${esc(t.nama)}" style="max-width:320px"><span class="muted" style="font-size:13px">${t.blocks.length} blok · soalan ${qs}</span><button class="btn sm danger" data-tdel="${esc(id)}">Padam</button></div>`}).join('')
+    :'<p class="muted" style="margin:0">Belum ada templat. Templat dibina semasa imbasan pertama.</p>';
+  $('#tplList').querySelectorAll('[data-tn]').forEach(i=>i.addEventListener('change',e=>{DB.templates[e.target.dataset.tn].nama=e.target.value.trim()||'Borang';save();refreshSelectors()}));
+  $('#tplList').querySelectorAll('[data-tdel]').forEach(b=>b.addEventListener('click',()=>{if(!confirm('Padam templat ini?'))return;delete DB.templates[b.dataset.tdel];save();refreshSelectors();renderTetapan()}));
+  const s=DB.settings;$('#setSens').value=s.sens;$('#sensV').textContent=s.sens.toFixed(2);$('#setMode').value=s.mode;$('#setAlign').checked=s.autoAlign;$('#setCorner').checked=s.checkCorners;
+}
+function readJson(file){return file.text().then(t=>JSON.parse(t))}
+
+/* =========================================================
+   WIRING
+   ========================================================= */
+function showTab(t){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  ['imbas','keputusan','analisis','tetapan'].forEach(x=>$('#t-'+x).hidden=x!==t);
+  if(t==='keputusan')renderResults();if(t==='analisis')renderAnalisis();if(t==='tetapan')renderTetapan();if(t==='imbas'&&ST.cur)setTimeout(()=>{fitCanvas();render()},0);window.scrollTo(0,0)}
+window.showTab=showTab;
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.t)));
+$('#selPaper').addEventListener('change',e=>{DB.settings.paper=e.target.value;save();if(ST.stage==='result')reEval();else if(ST.stage==='template'){liveEval();tplSummary();sched()}});
+$('#selTpl').addEventListener('change',e=>{DB.settings.tpl=e.target.value;save()});
+$('#inCam').addEventListener('change',e=>{addFiles([...e.target.files]);e.target.value=''});
+$('#inFile').addEventListener('change',e=>{addFiles([...e.target.files]);e.target.value=''});
+$('#zIn').addEventListener('click',()=>{ST.zoom=Math.min(4,ST.zoom*1.5);fitCanvas()});
+$('#zOut').addEventListener('click',()=>{ST.zoom=Math.max(1,ST.zoom/1.5);fitCanvas()});
+window.addEventListener('resize',()=>{if(ST.cur)fitCanvas()});
+['fPaper','fKelas'].forEach(id=>$('#'+id).addEventListener('change',renderResults));$('#fCari').addEventListener('input',renderResults);
+['aPaper','aKelas'].forEach(id=>$('#'+id).addEventListener('change',renderAnalisis));
+$('#bCsv').addEventListener('click',exportCsv);$('#bTsv').addEventListener('click',copyTsv);
+$('#bDelFilt').addEventListener('click',()=>{const rows=filtered();if(!rows.length)return;if(!confirm(`Padam ${rows.length} keputusan yang ditapis?`))return;const s=new Set(rows.map(r=>r.id));DB.results=DB.results.filter(r=>!s.has(r.id));save();renderResults()});
+$('#bAddPaper').addEventListener('click',()=>{const nama=prompt('Nama kertas (cth. Sejarah T2 UASA):');if(!nama)return;const k=prompt('Skema jawapan (taip huruf berturutan, cth. ABCDA…):','');const v=(k||'').toUpperCase().replace(/[^A-E]/g,'');if(!v)return toast('Skema kosong');
+  const id='P'+uid();DB.papers[id]={nama:nama.trim(),kunci:v,opsyen:/E/.test(v)?5:4};save();refreshSelectors();renderTetapan()});
+$('#setSens').addEventListener('input',e=>{DB.settings.sens=+e.target.value;$('#sensV').textContent=DB.settings.sens.toFixed(2);save()});
+$('#setMode').addEventListener('change',e=>{DB.settings.mode=e.target.value;save()});
+$('#setAlign').addEventListener('change',e=>{DB.settings.autoAlign=e.target.checked;save()});
+$('#setCorner').addEventListener('change',e=>{DB.settings.checkCorners=e.target.checked;save()});
+$('#bTplExp').addEventListener('click',()=>{if(!Object.keys(DB.templates).length)return toast('Tiada templat');download('templat_omr.json',JSON.stringify({jenis:'templat-omr',templates:DB.templates},null,1),'application/json')});
+$('#inTplImp').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=await readJson(f);const t=j.templates||{};let n=0;for(const id in t){if(t[id]&&Array.isArray(t[id].blocks)){DB.templates[DB.templates[id]?uid():id]=t[id];n++}}save();refreshSelectors();renderTetapan();toast(n+' templat diimport')}catch(err){toast('Fail tidak sah')}});
+$('#bBackup').addEventListener('click',()=>download(`sandaran_imbas_omr_${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(DB),'application/json'));
+$('#inRestore').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=await readJson(f);if(!j.papers)throw 0;if(!confirm('Gantikan semua data semasa dengan sandaran ini?'))return;DB={papers:j.papers,templates:j.templates||{},results:j.results||[],settings:Object.assign(defaults().settings,j.settings||{})};save();refreshSelectors();renderTetapan();toast('Sandaran dipulihkan')}catch(err){toast('Fail sandaran tidak sah')}});
+$('#bWipe').addEventListener('click',()=>{if(!DB.results.length)return toast('Tiada keputusan');if(!confirm(`Padam SEMUA ${DB.results.length} keputusan? Tindakan ini tidak boleh diundur.`))return;DB.results=[];save();toast('Semua keputusan dipadam')});
+
+refreshSelectors();
+window.OMR={detectPaper,warp,buildMaps,evaluate,alignBlock,blockGeom,get DB(){return DB},ST};
+</script>
+</body>
+</html>
